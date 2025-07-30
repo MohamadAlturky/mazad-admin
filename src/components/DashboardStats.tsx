@@ -40,16 +40,16 @@ const DashboardStats: React.FC = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       {stats.map((stat, index) => (
-        <Card key={index} className="border-purple-200 hover:shadow-lg transition-shadow bg-white">
+        <Card key={index} className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-purple-700">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               {stat.title}
             </CardTitle>
-            <stat.icon className="h-5 w-5 text-purple-500" />
+            <stat.icon className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-900">{stat.value}</div>
-            <p className="text-xs text-purple-600 mt-1">
+            <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+            <p className="text-xs text-muted-foreground mt-1">
               {stat.change} from last month
             </p>
           </CardContent>

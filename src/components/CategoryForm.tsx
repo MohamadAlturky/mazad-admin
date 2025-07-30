@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,11 +11,13 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { BaseTable } from '@/types';
 import { toast } from 'sonner';
 import { Riple } from 'react-loading-indicators';
+import { cwd } from 'process';
 
 export interface CategoryFormData {
   nameArabic: string;
   nameEnglish: string;
   parentId: number | null;
+  image: FileList;
 }
 
 interface CategoryFormProps {
@@ -41,7 +43,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ open, onOpenChange, onSubmi
 
   useEffect(() => {
     setIsLoading(true);
-    axios.get('http://localhost:5032/api/categories/dropdown', {
+    axios.get('http://localhost:5000/api/admin/categories/dropdown', {
       headers: {
         'Accept-Language': language
       }
@@ -65,18 +67,25 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ open, onOpenChange, onSubmi
   // }, [selectedCategory, setValue]);
 
   const handleFormSubmit = (data: CategoryFormData) => {
-    const requestData = {
-      nameArabic: data.nameArabic,
-      nameEnglish: data.nameEnglish,
-      parentId: data.parentId
-    };
+    const formData = new FormData();
+    formData.append('nameAr', data.nameArabic);
+    formData.append('nameEn', data.nameEnglish);
+    console.log('data.parentId', data.parentId);
+    if (data.parentId != null || data.parentId != undefined) {
+      formData.append('parentId', data.parentId.toString());
+    } else {
+      console.log('data.parentId is null');
+      // formData.append('parentId', 'null');
+    }
+    if (data.image && data.image.length > 0) {
+      formData.append('imageUrl', data.image[0]);
+    }
     setIsLoading(true);
-    console.log('requestData', requestData);
 
-    axios.post('http://localhost:5032/api/categories', requestData, {
+    axios.post('http://localhost:5000/api/admin/categories/create', formData, {
       headers: {
         'Accept-Language': language,
-        'Content-Type': 'application/json'
+        'Content-Type': 'multipart/form-data'
       }
     })
       .then(response => {
@@ -115,7 +124,10 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ open, onOpenChange, onSubmi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px] bg-card p-6 rounded-lg shadow-lg">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-foreground">{t('addRegion')}</DialogTitle>
+          <DialogTitle className="text-2xl font-bold text-foreground">{t('addCategory')}</DialogTitle>
+          <DialogDescription>
+            {t('addCategoryDescription')}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
@@ -142,6 +154,19 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ open, onOpenChange, onSubmi
             />
             {errors.nameEnglish && (
               <p className="text-destructive text-sm mt-1">{errors.nameEnglish.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="image" className="text-foreground text-base font-medium">{t('image')}</Label>
+            <Input
+              id="image"
+              type="file"
+              {...register('image')}
+              className="border-border focus:border-primary focus:ring-primary rounded-md p-2 text-foreground bg-background"
+            />
+            {errors.image && (
+              <p className="text-destructive text-sm mt-1">{errors.image.message}</p>
             )}
           </div>
 

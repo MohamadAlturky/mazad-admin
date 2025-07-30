@@ -2,19 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import DataTable from '@/components/DataTable';
-import RegionForm from '@/components/RegionForm';
+import SliderForm from '@/components/SliderForm';
 import AdminLayout from '@/components/AdminLayout';
 import axios from 'axios';
-import { Region, RegionFormData } from '../types';
+import { Slider, SliderFormData } from '../types';
 import { toast } from 'sonner';
-import RegionDetailsModal from '@/components/RegionDetailsModal';
+import SliderDetailsModal from '@/components/SliderDetailsModal';
 
-const Regions: React.FC = () => {
+const Sliders: React.FC = () => {
   const { t, language } = useLanguage();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [regions, setRegions] = useState<Region[]>([]);
-  const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
+  const [sliders, setSliders] = useState<Slider[]>([]);
+  const [selectedSlider, setSelectedSlider] = useState<Slider | null>(null);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -23,10 +23,10 @@ const Regions: React.FC = () => {
   const [editMode, setEditMode] = useState<boolean>(false);
 
   useEffect(() => {
-    const fetchRegions = async () => {
+    const fetchSliders = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get(`http://localhost:5000/api/admin/regions?pageNumber=${currentPage}&pageSize=${pageSize}`, {
+        const response = await axios.get(`http://localhost:5000/api/admin/sliders?pageNumber=${currentPage}&pageSize=${pageSize}`, {
           headers: {
             'Accept-Language': language,
           },
@@ -34,24 +34,32 @@ const Regions: React.FC = () => {
         console.log(response.data.data.items);
 
         if (response.data.success) {
-          setRegions(response.data.data.items);
+          setSliders(response.data.data.items);
           setTotalCount(response.data.data.totalCount);
         } else {
-          toast.error(t('errorFetchingRegions'));
+          toast.error(t('errorFetchingSliders'));
         }
       } catch (error) {
-        toast.error(t('errorFetchingRegions'));
+        toast.error(t('errorFetchingSliders'));
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchRegions();
+    fetchSliders();
   }, [language, t, currentPage, pageSize, isRefetching]);
 
   const columns = [
+    {
+      key: 'imageUrl',
+      label: t('image'),
+      render: (imageUrl: string) => (
+        <img src={`http://localhost:5000/uploads/${imageUrl}`} alt="slider" className="w-12 h-12 rounded-full" />
+      ),
+    },
     { key: 'name', label: t('name') },
-    { key: 'parentName', label: t('parent') },
+    { key: 'startDate', label: t('startDate') },
+    { key: 'endDate', label: t('endDate') },
     {
       key: 'isActive',
       label: t('status'),
@@ -68,26 +76,30 @@ const Regions: React.FC = () => {
 
   const handleAdd = () => {
     setEditMode(false);
-    setSelectedRegion(null);
+    setSelectedSlider(null);
     setIsFormOpen(true);
   };
 
-  const handleFormSubmit = async (data: RegionFormData) => {
-    const requestData = {
-        nameEnglish: data.nameEnglish,
-        nameArabic: data.nameArabic,
-        parentId: data.parentId
+  const handleFormSubmit = async (data: SliderFormData) => {
+    const formData = new FormData();
+    formData.append('NameAr', data.nameArabic);
+    formData.append('NameEn', data.nameEnglish);
+    formData.append('StartDate', data.startDate.toISOString());
+    formData.append('EndDate', data.endDate.toISOString());
+    if (data.image) {
+      formData.append('Image', data.image);
     }
 
     try {
       setIsLoading(true);
-      const url = editMode && selectedRegion
-        ? `http://localhost:5000/api/admin/regions/update/${selectedRegion.id}`
-        : 'http://localhost:5000/api/admin/regions/create';
+      const url = editMode && selectedSlider
+        ? `http://localhost:5000/api/admin/sliders/update/${selectedSlider.id}`
+        : 'http://localhost:5000/api/admin/sliders/create';
       const method = editMode ? 'put' : 'post';
 
-      const response = await axios[method](url, requestData, {
+      const response = await axios[method](url, formData, {
         headers: {
+          'Content-Type': 'multipart/form-data',
           'Accept-Language': language,
         },
       });
@@ -97,32 +109,32 @@ const Regions: React.FC = () => {
         setIsRefetching(isRefetching => !isRefetching);
         setIsFormOpen(false);
         setEditMode(false);
-        setSelectedRegion(null);
+        setSelectedSlider(null);
       } else {
         toast.error(response.data.message);
       }
     } catch (error) {
-      toast.error(t(editMode ? 'errorUpdatingRegion' : 'errorCreatingRegion'));
+      toast.error(t(editMode ? 'errorUpdatingSlider' : 'errorCreatingSlider'));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleEdit = (region: Region) => {
+  const handleEdit = (slider: Slider) => {
     setEditMode(true);
-    setSelectedRegion(region);
+    setSelectedSlider(slider);
     setIsFormOpen(true);
   };
 
-  const handleView = (region: Region) => {
-    setSelectedRegion(region);
+  const handleView = (slider: Slider) => {
+    setSelectedSlider(slider);
     setIsDetailsModalOpen(true);
   };
 
-  const handleDelete = async (region: Region) => {
+  const handleDelete = async (slider: Slider) => {
     try {
       setIsLoading(true);
-      const response = await axios.delete(`http://localhost:5000/api/admin/regions/delete/${region.id}`, {
+      const response = await axios.delete(`http://localhost:5000/api/admin/sliders/delete/${slider.id}`, {
         headers: {
           'Accept-Language': language,
         },
@@ -135,25 +147,25 @@ const Regions: React.FC = () => {
         toast.error(response.data.message);
       }
     } catch (error) {
-      toast.error(t('errorDeletingRegion'));
+      toast.error(t('errorDeletingSlider'));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleToggleActivation = async (region: Region) => {
+  const handleToggleActivation = async (slider: Slider) => {
     try {
       setIsLoading(true);
-      const response = await axios.patch(`http://localhost:5000/api/admin/regions/toggle-activation/${region.id}`, null, {
+      const response = await axios.patch(`http://localhost:5000/api/admin/sliders/toggle-activation/${slider.id}`, null, {
         headers: {
           'Accept-Language': language,
         },
       });
       if (response.data.success) {
         toast.success(response.data.message);
-        setRegions((prevRegions) =>
-          prevRegions.map((r) =>
-            r.id === region.id ? { ...r, isActive: !r.isActive } : r
+        setSliders((prevSliders) =>
+          prevSliders.map((s) =>
+            s.id === slider.id ? { ...s, isActive: !s.isActive } : s
           )
         );
       } else {
@@ -174,36 +186,35 @@ const Regions: React.FC = () => {
     <AdminLayout loading={isLoading}>
       <>
         <DataTable
-          title={t('regions')}
+          title={t('sliders')}
           columns={columns}
-          data={regions}
+          data={sliders}
           onAdd={handleAdd}
           onEdit={handleEdit}
           onDelete={handleDelete}
           onView={handleView}
           onToggleActivation={handleToggleActivation}
-          addButtonText={t('addRegion')}
+          addButtonText={t('addSlider')}
           currentPage={currentPage}
           pageSize={pageSize}
           totalCount={totalCount}
           onPageChange={handlePageChange}
           showtree={false}
-          showRegionsTree={true}
         />
-        <RegionForm
+        <SliderForm
           open={isFormOpen}
           onOpenChange={setIsFormOpen}
           onSubmit={handleFormSubmit}
-          region={selectedRegion}
+          slider={selectedSlider}
         />
-        <RegionDetailsModal
+        <SliderDetailsModal
             open={isDetailsModalOpen}
             onOpenChange={setIsDetailsModalOpen}
-            region={selectedRegion}
+            slider={selectedSlider}
         />
       </>
     </AdminLayout>
   );
 };
 
-export default Regions;
+export default Sliders; 

@@ -16,7 +16,7 @@ const Index = () => {
             {t('welcome')} {t('mazad')} {t('adminPanel')}
           </h1>
           <p className="text-purple-600">
-            Manage your auction platform with ease and efficiency
+            Manage your platform with ease and efficiency
           </p>
         </div>
 

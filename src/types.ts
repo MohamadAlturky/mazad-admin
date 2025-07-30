@@ -1,6 +1,7 @@
 export interface Category extends BaseTable {
   name: string;
   isActive: boolean;
+  imageUrl: string;
 }
 export interface BaseTable {
   id: number;
@@ -14,12 +15,28 @@ export interface DynamicAttribute extends BaseTable {
 
 export interface Region extends BaseTable {
   name: string;
-  status: 'active' | 'inactive';
-  createdAt: string;
+  parentId?: number;
+  parentName?: string;
 }
 
 export interface RegionFormData {
+  nameEnglish: string;
+  nameArabic: string;
+  parentId?: number;
+}
+
+export interface Slider extends BaseTable {
   name: string;
-  isActive: boolean;
+  imageUrl: string;
+  startDate: string;
+  endDate: string;
+}
+
+export interface SliderFormData {
+  nameArabic: string;
+  nameEnglish: string;
+  startDate: Date;
+  endDate: Date;
+  image: File | null;
 }
 

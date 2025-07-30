@@ -75,6 +75,10 @@ const CategoriesTree: React.FC = () => {
         setExpandedItems(new Set(allIds));
     };
 
+    const closeAll = () => {
+        setExpandedItems(new Set());
+    };
+
     const renderCategoryItem = (item: CategoryItem, level: number = 0) => {
         const hasChildren = item.children && item.children.length > 0;
         const isExpanded = expandedItems.has(item.id);
@@ -144,14 +148,24 @@ const CategoriesTree: React.FC = () => {
             <Card className="border-border">
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="text-foreground">{t('categories')}</CardTitle>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={openAll}
-                        className="text-primary border-border hover:bg-accent"
-                    >
-                        {t('openAll')}
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={openAll}
+                            className="text-primary border-border hover:bg-accent"
+                        >
+                            {t('openAll')}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={closeAll}
+                            className="text-primary border-border hover:bg-accent"
+                        >
+                            {t('closeAll')}
+                        </Button>
+                    </div>
                 </CardHeader>
 
                 <CardContent>

@@ -19,9 +19,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, loading }) => {
   const menuItems = [
     { icon: Grid3X3, label: t('dashboard'), href: '/' },
     { icon: Users, label: t('users'), href: '/users' },
-    // { icon: MapPin, label: t('regions'), href: '/regions' },
+    { icon: MapPin, label: t('regions'), href: '/regions' },
     { icon: Grid3X3, label: t('categories'), href: '/categories' },
-    { icon: ListFilter, label: t('dynamicAttributes'), href: '/dynamic-attributes' },
+    { icon: Grid3X3, label: t('sliders'), href: '/sliders' },
+    // { icon: ListFilter, label: t('dynamicAttributes'), href: '/dynamic-attributes' },
   ];
 
   return (
@@ -41,7 +42,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, loading }) => {
 
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">م</span>
+                <span className="text-primary-foreground font-bold text-sm">س</span>
               </div>
               <div>
                 <h1 className="text-xl font-bold text-foreground">{t('mazad')}</h1>

@@ -42,6 +42,7 @@ interface DataTableProps {
   totalCount: number;
   onPageChange: (newPage: number) => void;
   showtree: boolean;
+  showRegionsTree?: boolean;
 }
 
 const Pagination: React.FC<{ currentPage: number; totalPages: number; onPageChange: (page: number) => void; }> = ({ currentPage, totalPages, onPageChange }) => {
@@ -116,12 +117,13 @@ const DataTable: React.FC<DataTableProps> = ({
   pageSize,
   totalCount,
   onPageChange,
-  showtree
+  showtree,
+  showRegionsTree = false
 }) => {
   const { t, isRTL, language } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredData = data.filter(item =>
+  const filteredData = (data || []).filter(item =>
     Object.values(item).some(value =>
       value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
     )
@@ -249,6 +251,23 @@ const DataTable: React.FC<DataTableProps> = ({
                 </Tooltip>
               </TooltipProvider>
             )}
+
+            {showRegionsTree && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                      <Link to="/regions-tree">
+                        {t('regionsTree')}
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{t('viewRegionsTree')}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -335,6 +354,23 @@ const DataTable: React.FC<DataTableProps> = ({
                               </TooltipContent>
                             </Tooltip>
                           )}
+                          {onView && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => onView(row)}
+                                  className="text-foreground hover:bg-accent"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{t('view')}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
                           {onEdit && (
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -376,7 +412,7 @@ const DataTable: React.FC<DataTableProps> = ({
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => onToggleActivation(row)}
-                                  className="text-yellow-600 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/20 w-24"
+                                  className="text-accent-foreground/80 hover:bg-accent/80 w-24"
                                 >
                                   <span>{row.isActive ? t('deactivate') : t('activate')}</span>
                                 </Button>

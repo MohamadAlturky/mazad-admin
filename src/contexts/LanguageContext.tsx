@@ -12,7 +12,7 @@ interface LanguageContextType {
 const translations = {
   ar: {
     // App Name
-    mazad: 'مزاد',
+    mazad: 'سهل',
     adminPanel: 'لوحة الإدارة',
     
     // Navigation
@@ -119,7 +119,7 @@ const translations = {
   },
   en: {
     // App Name
-    mazad: 'Mazad',
+    mazad: 'Sahel',
     adminPanel: 'Admin Panel',
     
     // Navigation

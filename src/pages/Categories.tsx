@@ -33,14 +33,15 @@ const Categories: React.FC = () => {
       console.log(currentPage, pageSize);
       setIsLoading(true);
       try {
-        const response = await axios.get(`http://localhost:5032/api/categories/list?pageNumber=${currentPage}&pageSize=${pageSize}`, {
+        const response = await axios.get(`http://localhost:5000/api/admin/categories?pageNumber=${currentPage}&pageSize=${pageSize}`, {
           headers: {
             'Accept-Language': language,
           },
         });
 
         if (response.data.success) {
-          setCategories(response.data.data.categories);
+          console.log(response);
+          setCategories(response.data.data.items);
           setTotalCount(response.data.data.totalCount);
           // toast.success(response.data.message || t('categoryFetchedSuccessfully'));
         } else {
@@ -57,6 +58,13 @@ const Categories: React.FC = () => {
   }, [language, t, currentPage, pageSize, isRefetching]);
 
   const columns = [
+    {
+      key: 'imageUrl',
+      label: t('image'),
+      render: (imageUrl: string) => (
+        <img src={`http://localhost:5000/uploads/${imageUrl}`} alt="category" className="w-12 h-12 rounded-full" />
+      ),
+    },
     { key: 'name', label: t('name') },
     { key: 'parentName', label: t('parentName') },
     {
