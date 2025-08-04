@@ -3,7 +3,6 @@ import { Edit, Trash2, Eye, Plus, Search, ChevronRight, ChevronLeft, ListChecks 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { BaseTable } from '@/types';
@@ -41,12 +40,53 @@ interface DataTableProps {
   pageSize: number;
   totalCount: number;
   onPageChange: (newPage: number) => void;
+  onSearchChange?: (searchTerm: string) => void;
   showtree: boolean;
   showRegionsTree?: boolean;
+  showActions?: boolean;
 }
 
-const Pagination: React.FC<{ currentPage: number; totalPages: number; onPageChange: (page: number) => void; }> = ({ currentPage, totalPages, onPageChange }) => {
-  const { t } = useLanguage();
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange }) => {
+  const { t, isRTL } = useLanguage();
+  const getPageNumbers = () => {
+    const totalNumbers = 5;
+    const totalBlocks = totalNumbers + 2;
+
+    if (totalPages > totalBlocks) {
+      const startPage = Math.max(2, currentPage - 2);
+      const endPage = Math.min(totalPages - 1, currentPage + 2);
+
+      const pages: (number | string)[] = [1];
+
+      if (currentPage > 4) {
+        pages.push('...');
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        if ( (pages[pages.length-1] !== '...') || (i > (pages[pages.length-2] as number)) ){
+          pages.push(i);
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        pages.push('...');
+      }
+      
+      pages.push(totalPages);
+
+      return pages;
+    }
+
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  };
+
+  const pageNumbers = getPageNumbers();
 
   return (
     <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
@@ -62,14 +102,14 @@ const Pagination: React.FC<{ currentPage: number; totalPages: number; onPageChan
           disabled={currentPage === 1}
           className="border-border text-foreground hover:bg-accent"
         >
-          {t('previous')}
+          {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          <span className="sr-only">{t('previous')}</span>
         </Button>
 
-        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-          const page = i + 1;
-          return (
+        {pageNumbers.map((page, index) =>
+          typeof page === 'number' ? (
             <Button
-              key={page}
+              key={index}
               variant={currentPage === page ? "default" : "outline"}
               size="sm"
               onClick={() => onPageChange(page)}
@@ -81,8 +121,10 @@ const Pagination: React.FC<{ currentPage: number; totalPages: number; onPageChan
             >
               {page}
             </Button>
-          );
-        })}
+          ) : (
+            <span key={index} className="px-2 py-1">...</span>
+          )
+        )}
 
         <Button
           variant="outline"
@@ -91,7 +133,8 @@ const Pagination: React.FC<{ currentPage: number; totalPages: number; onPageChan
           disabled={currentPage === totalPages}
           className="border-border text-foreground hover:bg-accent"
         >
-          {t('next')}
+          {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          <span className="sr-only">{t('next')}</span>
         </Button>
       </div>
     </div>
@@ -117,24 +160,37 @@ const DataTable: React.FC<DataTableProps> = ({
   pageSize,
   totalCount,
   onPageChange,
+  onSearchChange,
   showtree,
-  showRegionsTree = false
+  showRegionsTree = false,
+  showActions = true,
 }) => {
-  const { t, isRTL, language } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredData = (data || []).filter(item =>
-    Object.values(item).some(value =>
-      value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newSearchTerm = event.target.value;
+    setSearchTerm(newSearchTerm);
+    if (onSearchChange) {
+      onSearchChange(newSearchTerm);
+    }
+  };
+
+  const filteredData = onSearchChange
+    ? (data || [])
+    : (data || []).filter(item =>
+        Object.values(item).some(value =>
+          value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
 
   const totalPages = Math.ceil(totalCount / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
   const paginatedData = filteredData;
 
   const handlePageChange = (page: number) => {
-    onPageChange(page);
+    if (page >= 1 && page <= totalPages) {
+      onPageChange(page);
+    }
   };
 
   const renderCell = (column: Column, row: BaseTable) => {
@@ -166,12 +222,14 @@ const DataTable: React.FC<DataTableProps> = ({
                   {column.label}
                 </th>
               ))}
-              <th className={cn(
-                "py-3 px-5 font-semibold text-foreground min-w-[140px] whitespace-nowrap",
-                isRTL ? "text-right" : "text-center"
-              )}>
-                {t('actions')}
-              </th>
+              {showActions && (
+                <th className={cn(
+                  "py-3 px-5 font-semibold text-foreground min-w-[140px] whitespace-nowrap",
+                  isRTL ? "text-right" : "text-center"
+                )}>
+                  {t('actions')}
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -188,9 +246,11 @@ const DataTable: React.FC<DataTableProps> = ({
                     <div className="h-4 bg-muted rounded animate-pulse" />
                   </td>
                 ))}
-                <td className="py-3 px-5 text-center">
-                  <div className="h-4 bg-muted rounded animate-pulse" />
-                </td>
+                {showActions && (
+                  <td className="py-3 px-5 text-center">
+                    <div className="h-4 bg-muted rounded animate-pulse" />
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -211,7 +271,7 @@ const DataTable: React.FC<DataTableProps> = ({
               <Input
                 placeholder={t('search')}
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearchChange}
                 className={cn("border-border focus:border-primary", isRTL ? "pr-10" : "pl-10")}
               />
             </div>
@@ -301,12 +361,14 @@ const DataTable: React.FC<DataTableProps> = ({
                       {column.label}
                     </th>
                   ))}
-                  <th className={cn(
-                    "py-3 px-5 font-semibold text-foreground min-w-[140px] whitespace-nowrap",
-                    isRTL ? "text-center" : "text-center"
-                  )}>
-                    {t('actions')}
-                  </th>
+                  {showActions && (
+                    <th className={cn(
+                      "py-3 px-5 font-semibold text-foreground min-w-[140px] whitespace-nowrap",
+                      isRTL ? "text-center" : "text-center"
+                    )}>
+                      {t('actions')}
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -317,10 +379,11 @@ const DataTable: React.FC<DataTableProps> = ({
                         {renderCell(column, row)}
                       </td>
                     ))}
-                    <td className={cn("py-3 px-5 align-middle min-w-[140px]", isRTL ? "text-center" : "text-center")}>
-                      <div className="flex items-center justify-center gap-2">
-                        <TooltipProvider>
-                          {showSubcategoriesAction && onViewSubcategories && (
+                    {showActions && (
+                      <td className={cn("py-3 px-5 align-middle min-w-[140px]", isRTL ? "text-center" : "text-center")}>
+                        <div className="flex items-center justify-center gap-2">
+                          <TooltipProvider>
+                            {showSubcategoriesAction && onViewSubcategories && (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
@@ -425,6 +488,7 @@ const DataTable: React.FC<DataTableProps> = ({
                         </TooltipProvider>
                       </div>
                     </td>
+                  )}
                   </tr>
                 ))}
               </tbody>
